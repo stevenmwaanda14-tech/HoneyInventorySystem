@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: honey-inventory
+    runtime: docker
+    repo: https://github.com/stevenmwaanda14-tech/HoneyInventorySystem
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+
