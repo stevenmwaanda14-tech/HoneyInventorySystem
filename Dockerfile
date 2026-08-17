@@ -3,12 +3,12 @@
 # Click nbfs://nbhost/SystemFileSystem/Templates/Other/Dockerfile to edit this template
 
 # Build stage
-FROM eclipse-temurin:21-jdk AS build
+# Build stage
+FROM maven:3.9.8-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy maven wrapper and pom.xml
+# Copy pom.xml and download dependencies
 COPY pom.xml .
-RUN apt-get update && apt-get install -y maven
 RUN mvn dependency:go-offline -B
 
 # Copy source code
@@ -27,5 +27,5 @@ COPY --from=build /app/target/*.jar app.jar
 # Expose port
 EXPOSE 8080
 
-# Run the application
+# Run with Render's PORT environment variable
 ENTRYPOINT ["java", "-jar", "app.jar"]

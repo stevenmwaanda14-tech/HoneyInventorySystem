@@ -9,4 +9,5 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
-
+      - key: JAVA_OPTS
+        value: -Xmx256m
