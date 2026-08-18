@@ -10,19 +10,16 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: #f5f0eb;
             padding: 20px;
             min-height: 100vh;
         }
-        
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
         .header {
             background: linear-gradient(135deg, #8B4513, #D2691E);
             color: white;
@@ -34,21 +31,17 @@
             align-items: center;
             flex-wrap: wrap;
         }
-        
         .header h1 {
             font-size: 28px;
         }
-        
         .header h1 span {
             font-size: 32px;
         }
-        
         .header-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-        
         .header-actions button {
             background: rgba(255,255,255,0.2);
             border: 1px solid rgba(255,255,255,0.3);
@@ -59,17 +52,28 @@
             font-size: 14px;
             transition: all 0.3s;
         }
-        
         .header-actions button:hover {
             background: rgba(255,255,255,0.3);
         }
-        
+        .header-actions .btn-sell {
+            background: rgba(40, 167, 69, 0.4);
+            border-color: #28a745;
+        }
+        .header-actions .btn-sell:hover {
+            background: rgba(40, 167, 69, 0.6);
+        }
+        .header-actions .btn-receive {
+            background: rgba(23, 162, 184, 0.4);
+            border-color: #17a2b8;
+        }
+        .header-actions .btn-receive:hover {
+            background: rgba(23, 162, 184, 0.6);
+        }
         .last-updated {
             font-size: 13px;
             opacity: 0.8;
             margin-top: 5px;
         }
-        
         .alert-banner {
             background: #fff3cd;
             border-left: 5px solid #ffc107;
@@ -78,23 +82,19 @@
             margin-bottom: 20px;
             display: none;
         }
-        
         .alert-banner.critical {
             background: #f8d7da;
             border-left-color: #dc3545;
         }
-        
         .alert-banner.show {
             display: block;
         }
-        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
-        
         .stat-card {
             background: white;
             padding: 20px;
@@ -102,19 +102,16 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             text-align: center;
         }
-        
         .stat-card .number {
             font-size: 32px;
             font-weight: bold;
             color: #8B4513;
         }
-        
         .stat-card .label {
             font-size: 14px;
             color: #666;
             margin-top: 4px;
         }
-        
         .section {
             background: white;
             border-radius: 12px;
@@ -122,7 +119,6 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        
         .section h2 {
             font-size: 18px;
             color: #333;
@@ -130,17 +126,14 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #f0ebe5;
         }
-        
         .table-responsive {
             overflow-x: auto;
         }
-        
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
         }
-        
         th {
             text-align: left;
             padding: 10px 12px;
@@ -148,38 +141,31 @@
             font-weight: 600;
             color: #555;
         }
-        
         td {
             padding: 10px 12px;
             border-bottom: 1px solid #f0ebe5;
         }
-        
         tr:hover {
             background: #faf8f6;
         }
-        
         .badge {
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
         }
-        
         .badge-ok {
             background: #d4edda;
             color: #155724;
         }
-        
         .badge-low {
             background: #fff3cd;
             color: #856404;
         }
-        
         .badge-critical {
             background: #f8d7da;
             color: #721c24;
         }
-        
         .btn {
             padding: 10px 20px;
             border: none;
@@ -188,25 +174,20 @@
             font-size: 14px;
             transition: all 0.3s;
         }
-        
-        .btn-primary {
-            background: #D2691E;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #8B4513;
-        }
-        
         .btn-success {
             background: #28a745;
             color: white;
         }
-        
         .btn-success:hover {
             background: #218838;
         }
-        
+        .btn-primary {
+            background: #D2691E;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #8B4513;
+        }
         .modal {
             display: none;
             position: fixed;
@@ -219,11 +200,9 @@
             justify-content: center;
             align-items: center;
         }
-        
         .modal.show {
             display: flex;
         }
-        
         .modal-content {
             background: white;
             border-radius: 16px;
@@ -233,14 +212,12 @@
             max-height: 90vh;
             overflow-y: auto;
         }
-        
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-        
         .modal-close {
             background: none;
             border: none;
@@ -248,11 +225,12 @@
             cursor: pointer;
             color: #999;
         }
-        
+        .modal-close:hover {
+            color: #333;
+        }
         .form-group {
             margin-bottom: 12px;
         }
-        
         .form-group label {
             display: block;
             font-size: 14px;
@@ -260,7 +238,6 @@
             margin-bottom: 4px;
             color: #555;
         }
-        
         .form-group input,
         .form-group select {
             width: 100%;
@@ -269,7 +246,11 @@
             border-radius: 8px;
             font-size: 14px;
         }
-        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #D2691E;
+        }
         .toast {
             position: fixed;
             bottom: 20px;
@@ -283,62 +264,77 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             max-width: 400px;
         }
-        
         .toast.show {
             display: block;
+            animation: slideUp 0.3s ease;
         }
-        
         .toast.success {
             background: #28a745;
         }
-        
         .toast.error {
             background: #dc3545;
         }
-        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
         .loading {
             text-align: center;
             padding: 40px;
             color: #999;
         }
-        
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
                 text-align: center;
                 gap: 12px;
             }
-            
+            .header h1 {
+                font-size: 22px;
+            }
             .stats-grid {
                 grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- HEADER -->
         <header class="header">
             <div>
                 <h1><span>🍯</span> Honey Inventory</h1>
                 <div class="last-updated" id="lastUpdated">Loading...</div>
             </div>
             <div class="header-actions">
-                <button onclick="openModal('buildModal')">🏭 Build Packs</button>
-                <button onclick="openModal('sellModal')">💰 Sell Packs</button>
-                <button onclick="openModal('receiveModal')">📦 Receive</button>
+                <button class="btn-sell" onclick="openModal('sellModal')">💰 Sell Product</button>
+                <button class="btn-receive" onclick="openModal('receiveModal')">📦 Receive</button>
                 <button onclick="refreshData()">🔄 Refresh</button>
             </div>
         </header>
 
+        <!-- ALERT BANNER -->
         <div class="alert-banner" id="alertBanner">
             <h3 id="alertTitle">⚠️ Stock Alerts</h3>
             <div id="alertMessage"></div>
         </div>
 
+        <!-- STATS -->
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="number" id="totalPacks">0</div>
-                <div class="label">Total Packs Available</div>
+                <div class="label">Total Products Available</div>
             </div>
             <div class="stat-card">
                 <div class="number" id="totalMaterials">0</div>
@@ -354,12 +350,18 @@
             </div>
         </div>
 
+        <!-- RAW MATERIALS -->
         <div class="section">
             <h2>📦 Raw Materials</h2>
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr><th>Material</th><th>Quantity</th><th>Threshold</th><th>Status</th></tr>
+                        <tr>
+                            <th>Material</th>
+                            <th>Quantity</th>
+                            <th>Threshold</th>
+                            <th>Status</th>
+                        </tr>
                     </thead>
                     <tbody id="materialsTable">
                         <tr><td colspan="4" class="loading">Loading</td></tr>
@@ -368,12 +370,17 @@
             </div>
         </div>
 
+        <!-- FINISHED GOODS -->
         <div class="section">
-            <h2>📦 Finished Goods</h2>
+            <h2>📦 Finished Goods (Products Ready to Sell)</h2>
             <div class="table-responsive">
                 <table>
                     <thead>
-                        <tr><th>Product</th><th>Packs Available</th><th>Status</th></tr>
+                        <tr>
+                            <th>Product</th>
+                            <th>Available</th>
+                            <th>Status</th>
+                        </tr>
                     </thead>
                     <tbody id="finishedGoodsTable">
                         <tr><td colspan="3" class="loading">Loading</td></tr>
@@ -383,47 +390,32 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <div class="modal" id="buildModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🏭 Build New Packs</h3>
-                <button class="modal-close" onclick="closeModal('buildModal')">&times;</button>
-            </div>
-            <div class="form-group">
-                <label>Product</label>
-                <select id="buildProduct"><option value="">Select product...</option></select>
-            </div>
-            <div class="form-group">
-                <label>Number of Packs</label>
-                <input type="number" id="buildQuantity" value="1" min="1">
-            </div>
-            <button class="btn btn-success" onclick="submitBuild()">✅ Build Packs</button>
-        </div>
-    </div>
-
+    <!-- ===== SELL MODAL ===== -->
     <div class="modal" id="sellModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>💰 Sell Packs</h3>
+                <h3>💰 Sell Product</h3>
                 <button class="modal-close" onclick="closeModal('sellModal')">&times;</button>
             </div>
             <div class="form-group">
-                <label>Product</label>
-                <select id="sellProduct"><option value="">Select product...</option></select>
+                <label>Select Product</label>
+                <select id="sellProduct">
+                    <option value="">Select product...</option>
+                </select>
             </div>
             <div class="form-group">
-                <label>Number of Packs</label>
+                <label>Number of Products Sold</label>
                 <input type="number" id="sellQuantity" value="1" min="1">
             </div>
             <div class="form-group">
-                <label>Customer Name</label>
-                <input type="text" id="sellCustomer" placeholder="Walk-in customer">
+                <label>Customer Name (Optional)</label>
+                <input type="text" id="sellCustomer" placeholder="Optional">
             </div>
-            <button class="btn btn-primary" onclick="submitSell()">💰 Sell Packs</button>
+            <button class="btn btn-success" onclick="submitSell()">💰 Sell Product</button>
         </div>
     </div>
 
+    <!-- ===== RECEIVE MODAL ===== -->
     <div class="modal" id="receiveModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -442,38 +434,61 @@
                 <label>Quantity</label>
                 <input type="number" id="receiveQuantity" value="100" min="1">
             </div>
-            <button class="btn btn-success" onclick="submitReceive()">📦 Receive</button>
+            <div class="form-group">
+                <label>Supplier (Optional)</label>
+                <input type="text" id="receiveSupplier" placeholder="Supplier name">
+            </div>
+            <button class="btn btn-success" onclick="submitReceive()">📦 Receive Materials</button>
         </div>
     </div>
 
+    <!-- ===== TOAST (Hidden - Background refresh only) ===== -->
     <div class="toast" id="toast"></div>
 
     <script>
         const API_BASE = window.location.origin + '/api';
         let products = [];
 
+        // =========================================
+        // TOAST - For errors only (no refresh messages)
+        // =========================================
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.className = 'toast ' + type + ' show';
-            setTimeout(() => toast.classList.remove('show'), 4000);
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
+        // =========================================
+        // MODALS
+        // =========================================
         function openModal(id) {
             document.getElementById(id).classList.add('show');
-            if (id === 'buildModal' || id === 'sellModal') loadProducts();
+            if (id === 'sellModal') loadProducts();
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
         }
 
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.remove('show');
+            });
+        });
+
+        // =========================================
+        // LOAD PRODUCTS
+        // =========================================
         function loadProducts() {
             fetch(API_BASE + '/products')
                 .then(r => r.json())
                 .then(data => {
                     products = data;
-                    ['buildProduct', 'sellProduct'].forEach(id => {
+                    ['sellProduct'].forEach(id => {
                         const select = document.getElementById(id);
                         select.innerHTML = '<option value="">Select product...</option>';
                         data.forEach(p => {
@@ -487,6 +502,9 @@
                 .catch(() => showToast('Failed to load products', 'error'));
         }
 
+        // =========================================
+        // REFRESH DATA (Background - No toast)
+        // =========================================
         function refreshData() {
             fetch(API_BASE + '/inventory/status')
                 .then(r => r.json())
@@ -496,11 +514,13 @@
                     updateFinishedGoods(data.finishedGoods);
                     updateAlerts(data.alerts);
                     updateStats(data);
-                    showToast('✅ Data refreshed!', 'success');
                 })
                 .catch(() => showToast('❌ Failed to load data', 'error'));
         }
 
+        // =========================================
+        // UPDATE FUNCTIONS
+        // =========================================
         function updateStats(data) {
             let totalPacks = 0, lowStock = 0, critical = 0;
             data.finishedGoods?.forEach(f => totalPacks += f.quantityPacks || 0);
@@ -575,61 +595,78 @@
             }
         }
 
-        function submitBuild() {
-            const productId = document.getElementById('buildProduct').value;
-            const quantity = parseInt(document.getElementById('buildQuantity').value);
-            if (!productId || !quantity) return showToast('Please fill in all fields', 'error');
-            
-            fetch(API_BASE + `/production/build?productId=${productId}&packs=${quantity}`, { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.error) showToast('❌ ' + data.error, 'error');
-                    else { showToast('✅ Built ' + quantity + ' packs!', 'success'); closeModal('buildModal'); refreshData(); }
-                })
-                .catch(() => showToast('❌ Failed to build packs', 'error'));
-        }
-
+        // =========================================
+        // SELL PRODUCT (Updated)
+        // =========================================
         function submitSell() {
             const productId = document.getElementById('sellProduct').value;
             const quantity = parseInt(document.getElementById('sellQuantity').value);
             const customer = document.getElementById('sellCustomer').value || '';
-            if (!productId || !quantity) return showToast('Please fill in all fields', 'error');
-            
+
+            if (!productId) {
+                showToast('Please select a product', 'error');
+                return;
+            }
+            if (!quantity || quantity < 1) {
+                showToast('Please enter a valid quantity', 'error');
+                return;
+            }
+
             let url = API_BASE + `/sales/sell?productId=${productId}&packs=${quantity}`;
             if (customer) url += `&customerName=${encodeURIComponent(customer)}`;
-            
+
             fetch(url, { method: 'POST' })
                 .then(r => r.json())
                 .then(data => {
-                    if (data.error) showToast('❌ ' + data.error, 'error');
-                    else { showToast('💰 Sold ' + quantity + ' packs!', 'success'); closeModal('sellModal'); refreshData(); }
+                    if (data.error) {
+                        showToast('❌ ' + data.error, 'error');
+                    } else {
+                        showToast('💰 Sold ' + quantity + ' product(s)!', 'success');
+                        closeModal('sellModal');
+                        refreshData();
+                    }
                 })
-                .catch(() => showToast('❌ Failed to sell packs', 'error'));
+                .catch(() => showToast('❌ Failed to sell product', 'error'));
         }
 
+        // =========================================
+        // RECEIVE MATERIALS
+        // =========================================
         function submitReceive() {
             const materialId = document.getElementById('receiveMaterial').value;
             const quantity = parseInt(document.getElementById('receiveQuantity').value);
-            if (!quantity) return showToast('Please enter quantity', 'error');
-            
-            fetch(API_BASE + `/materials/receive?materialId=${materialId}&quantity=${quantity}`, { method: 'POST' })
+            const supplier = document.getElementById('receiveSupplier').value || '';
+
+            if (!quantity || quantity < 1) {
+                showToast('Please enter a valid quantity', 'error');
+                return;
+            }
+
+            let url = API_BASE + `/materials/receive?materialId=${materialId}&quantity=${quantity}`;
+            if (supplier) url += `&supplier=${encodeURIComponent(supplier)}`;
+
+            fetch(url, { method: 'POST' })
                 .then(r => r.json())
                 .then(data => {
-                    if (data.error) showToast('❌ ' + data.error, 'error');
-                    else { showToast('📦 Received ' + quantity + ' units!', 'success'); closeModal('receiveModal'); refreshData(); }
+                    if (data.error) {
+                        showToast('❌ ' + data.error, 'error');
+                    } else {
+                        showToast('📦 Received ' + quantity + ' ' + data.name + 's!', 'success');
+                        closeModal('receiveModal');
+                        refreshData();
+                    }
                 })
                 .catch(() => showToast('❌ Failed to receive materials', 'error'));
         }
 
-        // Close modal on outside click
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('show');
-            });
-        });
-
+        // =========================================
+        // AUTO-REFRESH IN BACKGROUND (No toast)
+        // =========================================
         refreshData();
         setInterval(refreshData, 30000);
+
+        // Load products when page loads
+        loadProducts();
     </script>
 </body>
 </html>

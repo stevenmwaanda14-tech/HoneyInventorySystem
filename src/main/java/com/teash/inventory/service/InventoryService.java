@@ -10,8 +10,6 @@ package com.teash.inventory.service;
  */
 
 
-
-
 import com.teash.inventory.entity.*;
 import com.teash.inventory.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,7 +152,7 @@ public class InventoryService {
         return updated;
     }
     
-    // ========== PRODUCTION ==========
+    // ========== PRODUCTION (Keep for history, but no alerts) ==========
     
     @Transactional
     public FinishedGoods buildPacks(Long productId, Integer packsToBuild, String producedBy) {
@@ -209,8 +207,8 @@ public class InventoryService {
         
         System.out.println("✅ " + message);
         
-        // Send Telegram notification for production
-        notificationService.sendTelegramProductionAlert(product.getName(), packsToBuild);
+        // Production notifications removed
+        // (No longer sending Telegram notifications for production)
         
         // Check if any materials are now below threshold after production
         checkMaterialsAfterOperation(Arrays.asList(jars, stickers, boxes));
@@ -262,7 +260,7 @@ public class InventoryService {
         saleRepository.save(sale);
         
         String message = String.format(
-            "💰 Sale Recorded\nProduct: %s\nPacks Sold: %d\nCustomer: %s\nRemaining Stock: %d",
+            "💰 Sale Recorded\nProduct: %s\nProducts Sold: %d\nCustomer: %s\nRemaining Stock: %d",
             product.getName(), packsToSell, 
             customerName != null ? customerName : "Walk-in", 
             finished.getQuantityPacks()

@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -88,31 +89,6 @@ public class InventoryController {
         }
     }
     
-    // ========== PRODUCTION ==========
-    
-    @PostMapping("/production/build")
-    public ResponseEntity<?> buildPacks(
-            @RequestParam Long productId,
-            @RequestParam Integer packs,
-            @RequestParam(required = false, defaultValue = "System") String producedBy) {
-        try {
-            FinishedGoods result = inventoryService.buildPacks(productId, packs, producedBy);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "✅ Built " + packs + " packs successfully");
-            response.put("remainingStock", result.getQuantityPacks());
-            
-            // Check for alerts after production
-            notificationService.checkAndSendAlerts();
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-    
     // ========== SALES ==========
     
     @PostMapping("/sales/sell")
@@ -125,7 +101,7 @@ public class InventoryController {
             FinishedGoods result = inventoryService.sellPacks(productId, packs, customerName, salePrice);
             
             Map<String, Object> response = new HashMap<>();
-            response.put("message", "💰 Sold " + packs + " packs");
+            response.put("message", "💰 Sold " + packs + " product(s)");
             response.put("remainingStock", result.getQuantityPacks());
             
             // Check for alerts after sale
@@ -154,6 +130,18 @@ public class InventoryController {
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getProducts() {
         return ResponseEntity.ok(inventoryService.getAllProducts());
+    }
+    
+    /**
+     * Get all product names only (for dropdowns)
+     */
+    @GetMapping("/products/names")
+    public ResponseEntity<List<String>> getProductNames() {
+        List<Product> products = inventoryService.getAllProducts();
+        List<String> names = products.stream()
+            .map(Product::getName)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(names);
     }
     
     // ========== NOTIFICATIONS ==========

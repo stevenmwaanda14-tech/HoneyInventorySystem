@@ -40,17 +40,20 @@ public class DataLoader implements CommandLineRunner {
             System.out.println("✅ Seeded 3 raw materials");
         }
         
-        // Seed products if empty
+        // Seed products if empty - UPDATED NAMES
         if (productRepository.count() == 0) {
-            Product wildflower = productRepository.save(new Product("Wildflower Honey", "HNY-WF-001"));
-            Product manuka = productRepository.save(new Product("Manuka Honey", "HNY-MK-001"));
-            Product clover = productRepository.save(new Product("Clover Honey", "HNY-CL-001"));
+            Product squeezable500 = productRepository.save(new Product("Squeezable 500g", "HNY-SQ-001"));
+            Product squeezable375 = productRepository.save(new Product("Squeezable 375ml", "HNY-SQ-375"));
+            Product ordinary375 = productRepository.save(new Product("Ordinary 375ml", "HNY-OR-375"));
             
             // Initialize finished goods
-            finishedGoodsRepository.save(new FinishedGoods(wildflower, 10));
-            finishedGoodsRepository.save(new FinishedGoods(manuka, 5));
-            finishedGoodsRepository.save(new FinishedGoods(clover, 0));
-            System.out.println("✅ Seeded 3 products");
+            finishedGoodsRepository.save(new FinishedGoods(squeezable500, 10));
+            finishedGoodsRepository.save(new FinishedGoods(squeezable375, 5));
+            finishedGoodsRepository.save(new FinishedGoods(ordinary375, 0));
+            System.out.println("✅ Seeded 3 products with updated names:");
+            System.out.println("   - Squeezable 500g");
+            System.out.println("   - Squeezable 375ml");
+            System.out.println("   - Ordinary 375ml");
         }
         
         System.out.println("🎯 Data loading complete!");

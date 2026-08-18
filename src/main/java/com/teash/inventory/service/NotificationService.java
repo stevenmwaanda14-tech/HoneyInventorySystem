@@ -9,6 +9,8 @@ package com.teash.inventory.service;
  * @author hp
  */
 
+
+
 import com.teash.inventory.entity.Notification;
 import com.teash.inventory.entity.RawMaterial;
 import com.teash.inventory.entity.FinishedGoods;
@@ -142,7 +144,7 @@ public class NotificationService {
     // =============================================
     
     public void sendTelegramStockAlert(String material, int quantity, int threshold, boolean isCritical) {
-        String emoji = isCritical ? "!!!!" : "⚠️";
+        String emoji = isCritical ? "🚨" : "⚠️";
         String status = isCritical ? "CRITICAL - OUT OF STOCK!" : "LOW STOCK";
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -186,52 +188,7 @@ public class NotificationService {
     }
     
     // =============================================
-    // PRODUCTION ALERT METHODS
-    // =============================================
-    
-    public void sendTelegramProductionAlert(String product, int packsBuilt) {
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        
-        String message = String.format(
-            "🏭 <b>Production Complete</b>\n" +
-            "─────────────────\n" +
-            "📦 Product: %s\n" +
-            "📊 Packs Built: <b>%d</b>\n" +
-            "📅 Date: %s\n" +
-            "🕐 Time: %s\n" +
-            "─────────────────\n" +
-            "✅ Production run successful!",
-            product, packsBuilt, date, time
-        );
-        
-        List<UserSettings> users = userSettingsRepository.findByIsActiveTrue();
-        for (UserSettings user : users) {
-            if (user.getNotifyProduction() != null && user.getNotifyProduction()) {
-                sendTelegramMessageToChat(message, user.getTelegramChatId());
-            }
-        }
-    }
-    
-    public void sendTelegramProductionAlertToUser(String product, int packsBuilt, String chatId) {
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        
-        String message = String.format(
-            "🏭 <b>Production Complete</b>\n" +
-            "─────────────────\n" +
-            "📦 Product: %s\n" +
-            "📊 Packs Built: <b>%d</b>\n" +
-            "🕐 Time: %s\n" +
-            "─────────────────\n" +
-            "✅ Production run successful!",
-            product, packsBuilt, time
-        );
-        
-        sendTelegramMessageToChat(message, chatId);
-    }
-    
-    // =============================================
-    // SALES ALERT METHODS
+    // SALES ALERT METHODS (Updated)
     // =============================================
     
     public void sendTelegramSalesAlert(String product, int packsSold, int remaining) {
@@ -242,7 +199,7 @@ public class NotificationService {
             "💰 <b>Sale Recorded</b>\n" +
             "─────────────────\n" +
             "📦 Product: %s\n" +
-            "📊 Packs Sold: <b>%d</b>\n" +
+            "📊 Products Sold: <b>%d</b>\n" +
             "📦 Remaining Stock: <b>%d</b>\n" +
             "📅 Date: %s\n" +
             "🕐 Time: %s",
@@ -264,7 +221,7 @@ public class NotificationService {
             "💰 <b>Sale Recorded</b>\n" +
             "─────────────────\n" +
             "📦 Product: %s\n" +
-            "📊 Packs Sold: <b>%d</b>\n" +
+            "📊 Products Sold: <b>%d</b>\n" +
             "📦 Remaining Stock: <b>%d</b>\n" +
             "🕐 Time: %s",
             product, packsSold, remaining, time
@@ -423,7 +380,6 @@ public class NotificationService {
                "You'll receive notifications when:\n" +
                "• Any material goes below threshold\n" +
                "• Any material is OUT OF STOCK\n" +
-               "• Production runs are completed\n" +
                "• Sales are recorded\n\n" +
                "📊 <b>Daily Summary:</b>\n" +
                "You'll get a daily summary at 9:00 AM";
@@ -496,7 +452,7 @@ public class NotificationService {
         }
         
         sb.append("─────────────────\n");
-        sb.append("📊 <b>Total Packs: ").append(totalPacks).append("</b>");
+        sb.append("📊 <b>Total Products: ").append(totalPacks).append("</b>");
         
         return sb.toString();
     }
@@ -557,7 +513,7 @@ public class NotificationService {
         sb.append("📊 <b>QUICK STATUS</b>\n");
         sb.append("─────────────────\n");
         sb.append("🕐 ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append("\n\n");
-        sb.append("📦 Total Packs: <b>").append(totalPacks).append("</b>\n");
+        sb.append("📦 Total Products: <b>").append(totalPacks).append("</b>\n");
         sb.append("📦 Materials: <b>").append(materials.size()).append("</b>\n");
         sb.append("🟡 Low Stock: <b>").append(lowStock).append("</b>\n");
         sb.append("🔴 Critical: <b>").append(critical).append("</b>\n");
