@@ -10,6 +10,7 @@ package com.teash.inventory.repository;
  */
 
 
+
 import com.teash.inventory.entity.ProductionRun;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

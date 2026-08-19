@@ -69,6 +69,13 @@
         .header-actions .btn-receive:hover {
             background: rgba(23, 162, 184, 0.6);
         }
+        .header-actions .btn-add-product {
+            background: rgba(255, 193, 7, 0.4);
+            border-color: #ffc107;
+        }
+        .header-actions .btn-add-product:hover {
+            background: rgba(255, 193, 7, 0.6);
+        }
         .last-updated {
             font-size: 13px;
             opacity: 0.8;
@@ -119,12 +126,39 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        .section h2 {
-            font-size: 18px;
-            color: #333;
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 16px;
             padding-bottom: 10px;
             border-bottom: 2px solid #f0ebe5;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .section-header h2 {
+            font-size: 18px;
+            color: #333;
+            margin: 0;
+        }
+        .section-header .section-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .section-header .section-actions button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .btn-add {
+            background: #ffc107;
+            color: #333;
+        }
+        .btn-add:hover {
+            background: #e0a800;
         }
         .table-responsive {
             overflow-x: auto;
@@ -187,6 +221,13 @@
         }
         .btn-primary:hover {
             background: #8B4513;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
         }
         .modal {
             display: none;
@@ -274,6 +315,9 @@
         .toast.error {
             background: #dc3545;
         }
+        .toast.info {
+            background: #17a2b8;
+        }
         @keyframes slideUp {
             from {
                 opacity: 0;
@@ -301,11 +345,28 @@
             .stats-grid {
                 grid-template-columns: 1fr 1fr;
             }
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .section-header .section-actions {
+                justify-content: center;
+            }
         }
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -370,9 +431,14 @@
             </div>
         </div>
 
-        <!-- FINISHED GOODS -->
+        <!-- PRODUCTS IN STOCK -->
         <div class="section">
-            <h2>📦 Finished Goods (Products Ready to Sell)</h2>
+            <div class="section-header">
+                <h2>📦 Products in Stock</h2>
+                <div class="section-actions">
+                    <button class="btn-add" onclick="openModal('addProductModal')">➕ Add Product</button>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -380,10 +446,11 @@
                             <th>Product</th>
                             <th>Available</th>
                             <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="finishedGoodsTable">
-                        <tr><td colspan="3" class="loading">Loading</td></tr>
+                        <tr><td colspan="4" class="loading">Loading</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -442,7 +509,35 @@
         </div>
     </div>
 
-    <!-- ===== TOAST (Hidden - Background refresh only) ===== -->
+    <!-- ===== ADD PRODUCT MODAL ===== -->
+    <div class="modal" id="addProductModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Add New Product</h3>
+                <button class="modal-close" onclick="closeModal('addProductModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Product Name</label>
+                <input type="text" id="newProductName" placeholder="e.g., Squeezable 500g">
+            </div>
+            <div class="form-group">
+                <label>SKU (Unique Identifier)</label>
+                <input type="text" id="newProductSku" placeholder="e.g., HNY-001">
+                <small style="color:#999;font-size:12px;">Must be unique. Example: HNY-SQ-001</small>
+            </div>
+            <div class="form-group">
+                <label>Initial Stock (packs)</label>
+                <input type="number" id="newProductStock" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label>Jars per Pack</label>
+                <input type="number" id="newProductJars" value="1" min="1">
+            </div>
+            <button class="btn btn-success" onclick="submitAddProduct()">➕ Add Product</button>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ===== -->
     <div class="toast" id="toast"></div>
 
     <script>
@@ -450,7 +545,7 @@
         let products = [];
 
         // =========================================
-        // TOAST - For errors only (no refresh messages)
+        // TOAST
         // =========================================
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -467,36 +562,52 @@
         // =========================================
         function openModal(id) {
             document.getElementById(id).classList.add('show');
-            if (id === 'sellModal') loadProducts();
+            if (id === 'sellModal') loadProductsForSelect();
+            if (id === 'addProductModal') {
+                // Generate a suggested SKU
+                const name = document.getElementById('newProductName');
+                if (!name.value) {
+                    // Auto-generate SKU suggestion
+                    document.getElementById('newProductSku').placeholder = 'HNY-' + Date.now().toString().slice(-6);
+                }
+            }
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
+            // Reset add product form
+            if (id === 'addProductModal') {
+                document.getElementById('newProductName').value = '';
+                document.getElementById('newProductSku').value = '';
+                document.getElementById('newProductStock').value = '0';
+                document.getElementById('newProductJars').value = '1';
+            }
         }
 
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('show');
+                if (e.target === this) {
+                    const id = this.id;
+                    closeModal(id);
+                }
             });
         });
 
         // =========================================
-        // LOAD PRODUCTS
+        // LOAD PRODUCTS FOR SELECT
         // =========================================
-        function loadProducts() {
+        function loadProductsForSelect() {
             fetch(API_BASE + '/products')
                 .then(r => r.json())
                 .then(data => {
                     products = data;
-                    ['sellProduct'].forEach(id => {
-                        const select = document.getElementById(id);
-                        select.innerHTML = '<option value="">Select product...</option>';
-                        data.forEach(p => {
-                            const opt = document.createElement('option');
-                            opt.value = p.id;
-                            opt.textContent = p.name;
-                            select.appendChild(opt);
-                        });
+                    const select = document.getElementById('sellProduct');
+                    select.innerHTML = '<option value="">Select product...</option>';
+                    data.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.name + ' (' + (p.available || 0) + ' available)';
+                        select.appendChild(opt);
                     });
                 })
                 .catch(() => showToast('Failed to load products', 'error'));
@@ -514,6 +625,14 @@
                     updateFinishedGoods(data.finishedGoods);
                     updateAlerts(data.alerts);
                     updateStats(data);
+                    // Update product list for sell dropdown
+                    if (data.finishedGoods) {
+                        products = data.finishedGoods.map(f => ({
+                            id: f.product?.id,
+                            name: f.product?.name,
+                            available: f.quantityPacks
+                        }));
+                    }
                 })
                 .catch(() => showToast('❌ Failed to load data', 'error'));
         }
@@ -556,7 +675,15 @@
         function updateFinishedGoods(goods) {
             const tbody = document.getElementById('finishedGoodsTable');
             if (!goods || goods.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3">No finished goods</td></tr>';
+                tbody.innerHTML = `<tr>
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <div class="icon">📦</div>
+                            <p>No products in stock</p>
+                            <p style="font-size:12px;">Click "Add Product" to add your first product!</p>
+                        </div>
+                    </td>
+                </tr>`;
                 return;
             }
             tbody.innerHTML = goods.map(f => {
@@ -567,6 +694,9 @@
                     <td><strong>${name}</strong></td>
                     <td><strong>${f.quantityPacks}</strong></td>
                     <td><span class="badge ${badge}">${status}</span></td>
+                    <td>
+                        <button class="btn btn-danger" style="padding:4px 12px;font-size:12px;" onclick="deleteProduct(${f.id})">🗑️ Remove</button>
+                    </td>
                 </tr>`;
             }).join('');
         }
@@ -596,7 +726,7 @@
         }
 
         // =========================================
-        // SELL PRODUCT (Updated)
+        // SELL PRODUCT
         // =========================================
         function submitSell() {
             const productId = document.getElementById('sellProduct').value;
@@ -660,13 +790,79 @@
         }
 
         // =========================================
-        // AUTO-REFRESH IN BACKGROUND (No toast)
+        // ADD PRODUCT
+        // =========================================
+        function submitAddProduct() {
+            const name = document.getElementById('newProductName').value.trim();
+            const sku = document.getElementById('newProductSku').value.trim();
+            const stock = parseInt(document.getElementById('newProductStock').value) || 0;
+            const jarsPerPack = parseInt(document.getElementById('newProductJars').value) || 1;
+
+            if (!name) {
+                showToast('Please enter a product name', 'error');
+                return;
+            }
+            if (!sku) {
+                showToast('Please enter a SKU', 'error');
+                return;
+            }
+
+            const payload = {
+                name: name,
+                sku: sku,
+                initialStock: stock,
+                jarsPerPack: jarsPerPack
+            };
+
+            fetch(API_BASE + '/products/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('❌ ' + data.error, 'error');
+                } else {
+                    showToast('✅ Product "' + name + '" added successfully!', 'success');
+                    closeModal('addProductModal');
+                    refreshData();
+                }
+            })
+            .catch(() => showToast('❌ Failed to add product', 'error'));
+        }
+
+        // =========================================
+        // DELETE PRODUCT
+        // =========================================
+        function deleteProduct(productId) {
+            if (!confirm('Are you sure you want to remove this product from inventory?')) {
+                return;
+            }
+
+            fetch(API_BASE + '/products/' + productId, {
+                method: 'DELETE'
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('❌ ' + data.error, 'error');
+                } else {
+                    showToast('✅ Product removed successfully!', 'success');
+                    refreshData();
+                }
+            })
+            .catch(() => showToast('❌ Failed to remove product', 'error'));
+        }
+
+        // =========================================
+        // AUTO-REFRESH IN BACKGROUND
         // =========================================
         refreshData();
         setInterval(refreshData, 30000);
-
-        // Load products when page loads
-        loadProducts();
+        loadProductsForSelect();
     </script>
 </body>
 </html>

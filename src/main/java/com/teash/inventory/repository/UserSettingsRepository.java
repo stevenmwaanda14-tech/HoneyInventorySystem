@@ -10,6 +10,8 @@ package com.teash.inventory.repository;
  */
 
 
+
+
 import com.teash.inventory.entity.UserSettings;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -20,14 +22,9 @@ import java.util.Optional;
 public interface UserSettingsRepository extends JpaRepository<UserSettings, Long> {
     
     Optional<UserSettings> findByUserEmail(String userEmail);
-    
     Optional<UserSettings> findByTelegramChatId(String telegramChatId);
-    
     List<UserSettings> findByIsActiveTrue();
-    
     List<UserSettings> findByNotifyDailySummaryTrueAndIsActiveTrue();
-    
     List<UserSettings> findByNotifyLowStockTrueAndIsActiveTrue();
-    
     List<UserSettings> findByNotifyCriticalStockTrueAndIsActiveTrue();
 }

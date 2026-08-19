@@ -9,6 +9,8 @@ package com.teash.inventory.repository;
  * @author hp
  */
 
+
+
 import com.teash.inventory.entity.Notification;
 import com.teash.inventory.entity.RawMaterial;
 import org.springframework.data.jpa.repository.JpaRepository;

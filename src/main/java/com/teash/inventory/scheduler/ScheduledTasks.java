@@ -47,22 +47,18 @@ public class ScheduledTasks {
     // STOCK CHECK - Every 30 minutes
     // =============================================
     
-    @Scheduled(fixedRate = 1800000) // 30 minutes
+    @Scheduled(fixedRate = 1800000)
     public void checkStockAndSendAlerts() {
         System.out.println("🔄 Running scheduled stock check at: " + LocalDateTime.now().format(TIME_FORMATTER));
         
         try {
-            // Check if any user wants notifications
             List<UserSettings> activeUsers = userSettingsRepository.findByIsActiveTrue();
-            
             if (activeUsers.isEmpty()) {
                 System.out.println("⚠️ No active users found for notifications.");
                 return;
             }
             
-            // Check stock and send alerts
             notificationService.checkAndSendAlerts();
-            
             System.out.println("✅ Stock check completed successfully.");
             
         } catch (Exception e) {
@@ -80,23 +76,39 @@ public class ScheduledTasks {
         System.out.println("📊 Running daily stock summary at: " + LocalDateTime.now().format(TIME_FORMATTER));
         
         try {
-            // Check if any user wants daily summary
             List<UserSettings> usersForSummary = userSettingsRepository.findByNotifyDailySummaryTrueAndIsActiveTrue();
-            
             if (usersForSummary.isEmpty()) {
                 System.out.println("ℹ️ No users opted in for daily summary.");
                 return;
             }
             
-            // Get all materials and finished goods
             List<RawMaterial> materials = rawMaterialRepository.findAll();
             List<FinishedGoods> finished = finishedGoodsRepository.findAll();
             
-            // Send summary to all active users who opted in
+            // Build summary message
+            StringBuilder message = new StringBuilder();
+            message.append("📊 <b>DAILY INVENTORY SUMMARY</b>\n");
+            message.append("─────────────────────────\n");
+            message.append("📅 ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("\n\n");
+            
+            message.append("📦 <b>Raw Materials:</b>\n");
+            for (RawMaterial material : materials) {
+                String status = material.isOutOfStock() ? "🔴 OUT OF STOCK" :
+                               material.isBelowThreshold() ? "🟡 LOW" : "🟢 OK";
+                message.append("  • ").append(material.getName()).append(": ").append(material.getQuantity()).append(" units (").append(status).append(")\n");
+            }
+            
+            message.append("\n📦 <b>Finished Goods:</b>\n");
+            for (FinishedGoods good : finished) {
+                String productName = good.getProduct() != null ? good.getProduct().getName() : "Unknown";
+                String status = good.getQuantityPacks() == 0 ? "🔴 OUT OF STOCK" : "✅ Available";
+                message.append("  • ").append(productName).append(": ").append(good.getQuantityPacks()).append(" packs (").append(status).append(")\n");
+            }
+            
+            // Send to all users who want daily summary
             for (UserSettings user : usersForSummary) {
-                // Use the 2-parameter version (sends to all users who opted in)
-                notificationService.sendTelegramDailySummary(materials, finished);
-                System.out.println("📧 Daily summary sent to user: " + user.getUserEmail());
+                notificationService.sendTelegramMessageToChat(message.toString(), user.getTelegramChatId());
+                System.out.println("📧 Daily summary sent to: " + user.getUserEmail());
             }
             
             System.out.println("✅ Daily summary completed successfully.");
@@ -116,20 +128,34 @@ public class ScheduledTasks {
         System.out.println("🌙 Running evening stock check at: " + LocalDateTime.now().format(TIME_FORMATTER));
         
         try {
-            // Do a full stock check
             notificationService.checkAndSendAlerts();
             
-            // Get all materials for a quick status
             List<RawMaterial> materials = rawMaterialRepository.findAll();
             List<FinishedGoods> finished = finishedGoodsRepository.findAll();
-            
-            // Send evening summary to users who want it
             List<UserSettings> eveningUsers = userSettingsRepository.findByIsActiveTrue();
             
             if (!eveningUsers.isEmpty()) {
-                // Use the 2-parameter version (sends to all active users)
-                notificationService.sendTelegramDailySummary(materials, finished);
-                System.out.println("🌙 Evening summary sent to active users.");
+                StringBuilder message = new StringBuilder();
+                message.append("🌙 <b>EVENING INVENTORY STATUS</b>\n");
+                message.append("─────────────────────────\n");
+                message.append("🕐 ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))).append("\n\n");
+                
+                message.append("📦 <b>Raw Materials:</b>\n");
+                for (RawMaterial material : materials) {
+                    String status = material.isOutOfStock() ? "🔴 OUT OF STOCK" :
+                                   material.isBelowThreshold() ? "🟡 LOW" : "🟢 OK";
+                    message.append("  • ").append(material.getName()).append(": ").append(material.getQuantity()).append(" units (").append(status).append(")\n");
+                }
+                
+                message.append("\n📦 <b>Finished Goods:</b>\n");
+                for (FinishedGoods good : finished) {
+                    String productName = good.getProduct() != null ? good.getProduct().getName() : "Unknown";
+                    message.append("  • ").append(productName).append(": ").append(good.getQuantityPacks()).append(" packs\n");
+                }
+                
+                UserSettings firstUser = eveningUsers.get(0);
+                notificationService.sendTelegramMessageToChat(message.toString(), firstUser.getTelegramChatId());
+                System.out.println("🌙 Evening summary sent to: " + firstUser.getUserEmail());
             }
             
             System.out.println("✅ Evening stock check completed.");
@@ -158,32 +184,44 @@ public class ScheduledTasks {
                 return;
             }
             
-            // Send weekly summary using the existing method
-            notificationService.sendTelegramWeeklySummary(materials, finished);
+            StringBuilder message = new StringBuilder();
+            message.append("📊 <b>WEEKLY INVENTORY REPORT</b>\n");
+            message.append("─────────────────────────\n");
+            message.append("📅 Week of: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))).append("\n\n");
             
-            System.out.println("✅ Weekly summary sent successfully.");
+            message.append("📦 <b>RAW MATERIALS</b>\n");
+            for (RawMaterial material : materials) {
+                String status = material.isOutOfStock() ? "🔴 OUT OF STOCK" :
+                               material.isBelowThreshold() ? "🟡 LOW" : "🟢 OK";
+                message.append("  • ").append(material.getName()).append(": ").append(material.getQuantity()).append(" units (").append(status).append(")\n");
+            }
+            
+            message.append("\n📦 <b>FINISHED GOODS</b>\n");
+            for (FinishedGoods good : finished) {
+                String productName = good.getProduct() != null ? good.getProduct().getName() : "Unknown";
+                message.append("  • ").append(productName).append(": ").append(good.getQuantityPacks()).append(" packs\n");
+            }
+            
+            message.append("\n─────────────────────────\n");
+            boolean hasCritical = false;
+            for (RawMaterial material : materials) {
+                if (material.isOutOfStock()) {
+                    hasCritical = true;
+                    message.append("🔴 CRITICAL: ").append(material.getName()).append(" is OUT OF STOCK!\n");
+                }
+            }
+            if (!hasCritical) {
+                message.append("✅ All materials are in stock!\n");
+            }
+            
+            message.append("\n📅 Generated: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            
+            UserSettings firstUser = activeUsers.get(0);
+            notificationService.sendTelegramMessageToChat(message.toString(), firstUser.getTelegramChatId());
+            System.out.println("✅ Weekly summary sent to: " + firstUser.getUserEmail());
             
         } catch (Exception e) {
             System.err.println("❌ Error during weekly summary: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    // =============================================
-    // DATABASE CLEANUP - Every Sunday at 3:00 AM
-    // =============================================
-    
-    @Scheduled(cron = "0 0 3 * * SUN")
-    public void cleanupNotifications() {
-        System.out.println("🧹 Running cleanup task at: " + LocalDateTime.now().format(TIME_FORMATTER));
-        
-        try {
-            // Delete notifications older than 30 days
-            // This would need a custom repository method
-            System.out.println("🧹 Cleanup completed.");
-            
-        } catch (Exception e) {
-            System.err.println("❌ Error during cleanup: " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -10,6 +10,7 @@ package com.teash.inventory.service;
  */
 
 
+
 import com.teash.inventory.entity.*;
 import com.teash.inventory.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,14 +88,12 @@ public class InventoryService {
         
         System.out.println("✅ " + message);
         
-        // Send Telegram notification for receiving materials
         notificationService.sendTelegramCustomAlert("📦 Material Received", message);
         
-        // Check if stock is now above threshold
         if (!material.isBelowThreshold()) {
             notificationService.sendTelegramCustomAlert(
                 "✅ Stock Restored",
-                material.getName() + " is now at " + material.getQuantity() + " units (Above threshold of " + material.getMinThreshold() + ")"
+                material.getName() + " is now at " + material.getQuantity() + " units"
             );
         }
         
@@ -139,7 +138,6 @@ public class InventoryService {
         System.out.println("✅ " + message);
         notificationService.sendTelegramCustomAlert("📊 Stock Updated", message);
         
-        // Check if stock is below threshold
         if (material.isBelowThreshold()) {
             notificationService.sendTelegramStockAlert(
                 material.getName(),
@@ -152,45 +150,39 @@ public class InventoryService {
         return updated;
     }
     
-    // ========== PRODUCTION (Keep for history, but no alerts) ==========
+    // ========== PRODUCTION ==========
     
     @Transactional
     public FinishedGoods buildPacks(Long productId, Integer packsToBuild, String producedBy) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
         
-        // Calculate required materials
         Integer jarsNeeded = packsToBuild * product.getJarsPerPack();
         Integer stickersNeeded = packsToBuild;
         Integer boxesNeeded = packsToBuild;
         
-        // Get raw materials
         RawMaterial jars = rawMaterialRepository.findByName("Jars")
-            .orElseThrow(() -> new RuntimeException("Jars material not found in database"));
+            .orElseThrow(() -> new RuntimeException("Jars material not found"));
         RawMaterial stickers = rawMaterialRepository.findByName("Stickers")
-            .orElseThrow(() -> new RuntimeException("Stickers material not found in database"));
+            .orElseThrow(() -> new RuntimeException("Stickers material not found"));
         RawMaterial boxes = rawMaterialRepository.findByName("Boxes")
-            .orElseThrow(() -> new RuntimeException("Boxes material not found in database"));
+            .orElseThrow(() -> new RuntimeException("Boxes material not found"));
         
-        // Check availability
         validateMaterials(jars, jarsNeeded, "Jars");
         validateMaterials(stickers, stickersNeeded, "Stickers");
         validateMaterials(boxes, boxesNeeded, "Boxes");
         
-        // Deduct materials
         jars.subtractQuantity(jarsNeeded);
         stickers.subtractQuantity(stickersNeeded);
         boxes.subtractQuantity(boxesNeeded);
         
         rawMaterialRepository.saveAll(Arrays.asList(jars, stickers, boxes));
         
-        // Add to finished goods
         FinishedGoods finished = finishedGoodsRepository.findByProduct(product)
             .orElse(new FinishedGoods(product, 0));
         finished.addPacks(packsToBuild);
         finishedGoodsRepository.save(finished);
         
-        // Log production
         ProductionRun run = new ProductionRun();
         run.setProduct(product);
         run.setPacksProduced(packsToBuild);
@@ -200,17 +192,8 @@ public class InventoryService {
         run.setProducedBy(producedBy != null ? producedBy : "System");
         productionRunRepository.save(run);
         
-        String message = String.format(
-            "🏭 Production Complete\nProduct: %s\nPacks Built: %d\nUsed: %d Jars, %d Stickers, %d Boxes",
-            product.getName(), packsToBuild, jarsNeeded, stickersNeeded, boxesNeeded
-        );
+        System.out.println("✅ Built " + packsToBuild + " packs of " + product.getName());
         
-        System.out.println("✅ " + message);
-        
-        // Production notifications removed
-        // (No longer sending Telegram notifications for production)
-        
-        // Check if any materials are now below threshold after production
         checkMaterialsAfterOperation(Arrays.asList(jars, stickers, boxes));
         
         return finished;
@@ -247,11 +230,9 @@ public class InventoryService {
         FinishedGoods finished = finishedGoodsRepository.findByProduct(product)
             .orElseThrow(() -> new RuntimeException("Product not found in inventory"));
         
-        Integer oldQuantity = finished.getQuantityPacks();
         finished.subtractPacks(packsToSell);
         finishedGoodsRepository.save(finished);
         
-        // Log sale
         Sale sale = new Sale();
         sale.setProduct(product);
         sale.setQuantityPacks(packsToSell);
@@ -259,27 +240,91 @@ public class InventoryService {
         sale.setSalePrice(salePrice);
         saleRepository.save(sale);
         
-        String message = String.format(
-            "💰 Sale Recorded\nProduct: %s\nProducts Sold: %d\nCustomer: %s\nRemaining Stock: %d",
-            product.getName(), packsToSell, 
-            customerName != null ? customerName : "Walk-in", 
-            finished.getQuantityPacks()
-        );
+        System.out.println("💰 Sold " + packsToSell + " of " + product.getName());
         
-        System.out.println("✅ " + message);
-        
-        // Send Telegram notification for sale
         notificationService.sendTelegramSalesAlert(product.getName(), packsToSell, finished.getQuantityPacks());
         
-        // Check if stock is getting low
         if (finished.getQuantityPacks() < 20) {
             notificationService.sendTelegramCustomAlert(
-                "⚠️ Low Finished Goods Stock",
-                String.format("%s has only %d packs remaining!", product.getName(), finished.getQuantityPacks())
+                "⚠️ Low Stock Warning",
+                product.getName() + " has only " + finished.getQuantityPacks() + " packs remaining!"
             );
         }
         
         return finished;
+    }
+    
+    // ========== PRODUCT MANAGEMENT ==========
+    
+    public Product getProductBySku(String sku) {
+        return productRepository.findBySku(sku).orElse(null);
+    }
+    
+    public Product saveProduct(Product product) {
+        return productRepository.save(product);
+    }
+    
+    @Transactional
+    public Product addNewProduct(String name, String sku, Integer initialStock, Integer jarsPerPack) {
+        // Check if SKU already exists
+        if (productRepository.findBySku(sku).isPresent()) {
+            throw new RuntimeException("SKU already exists: " + sku);
+        }
+        
+        // Create product
+        Product product = new Product(name, sku);
+        if (jarsPerPack != null && jarsPerPack > 0) {
+            product.setJarsPerPack(jarsPerPack);
+        }
+        Product saved = productRepository.save(product);
+        
+        // Add initial stock if provided
+        if (initialStock != null && initialStock > 0) {
+            addInitialStock(saved.getId(), initialStock);
+        }
+        
+        return saved;
+    }
+    
+    @Transactional
+    public void addInitialStock(Long productId, Integer quantity) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Product not found"));
+        
+        FinishedGoods finished = finishedGoodsRepository.findByProduct(product)
+            .orElse(new FinishedGoods(product, 0));
+        finished.addPacks(quantity);
+        finishedGoodsRepository.save(finished);
+    }
+    
+    @Transactional
+    public void deleteProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Product not found"));
+        
+        // Delete finished goods first
+        finishedGoodsRepository.findByProduct(product).ifPresent(finishedGoodsRepository::delete);
+        
+        // Delete the product
+        productRepository.delete(product);
+        
+        System.out.println("🗑️ Product deleted: " + product.getName());
+    }
+    
+    @Transactional
+    public Product updateProductStock(Long productId, Integer newQuantity) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Product not found"));
+        
+        FinishedGoods finished = finishedGoodsRepository.findByProduct(product)
+            .orElse(new FinishedGoods(product, 0));
+        
+        // Just update the quantity directly
+        finished.setQuantityPacks(newQuantity);
+        finished.setLastUpdated(LocalDateTime.now());
+        finishedGoodsRepository.save(finished);
+        
+        return product;
     }
     
     // ========== DASHBOARD ==========
