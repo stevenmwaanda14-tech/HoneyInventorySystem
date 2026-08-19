@@ -69,13 +69,6 @@
         .header-actions .btn-receive:hover {
             background: rgba(23, 162, 184, 0.6);
         }
-        .header-actions .btn-add-product {
-            background: rgba(255, 193, 7, 0.4);
-            border-color: #ffc107;
-        }
-        .header-actions .btn-add-product:hover {
-            background: rgba(255, 193, 7, 0.6);
-        }
         .last-updated {
             font-size: 13px;
             opacity: 0.8;
@@ -509,7 +502,7 @@
         </div>
     </div>
 
-    <!-- ===== ADD PRODUCT MODAL ===== -->
+    <!-- ===== ADD PRODUCT MODAL (NO SKU) ===== -->
     <div class="modal" id="addProductModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -519,11 +512,6 @@
             <div class="form-group">
                 <label>Product Name</label>
                 <input type="text" id="newProductName" placeholder="e.g., Squeezable 500g">
-            </div>
-            <div class="form-group">
-                <label>SKU (Unique Identifier)</label>
-                <input type="text" id="newProductSku" placeholder="e.g., HNY-001">
-                <small style="color:#999;font-size:12px;">Must be unique. Example: HNY-SQ-001</small>
             </div>
             <div class="form-group">
                 <label>Initial Stock (packs)</label>
@@ -563,22 +551,12 @@
         function openModal(id) {
             document.getElementById(id).classList.add('show');
             if (id === 'sellModal') loadProductsForSelect();
-            if (id === 'addProductModal') {
-                // Generate a suggested SKU
-                const name = document.getElementById('newProductName');
-                if (!name.value) {
-                    // Auto-generate SKU suggestion
-                    document.getElementById('newProductSku').placeholder = 'HNY-' + Date.now().toString().slice(-6);
-                }
-            }
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('show');
-            // Reset add product form
             if (id === 'addProductModal') {
                 document.getElementById('newProductName').value = '';
-                document.getElementById('newProductSku').value = '';
                 document.getElementById('newProductStock').value = '0';
                 document.getElementById('newProductJars').value = '1';
             }
@@ -606,7 +584,7 @@
                     data.forEach(p => {
                         const opt = document.createElement('option');
                         opt.value = p.id;
-                        opt.textContent = p.name + ' (' + (p.available || 0) + ' available)';
+                        opt.textContent = p.name;
                         select.appendChild(opt);
                     });
                 })
@@ -614,7 +592,7 @@
         }
 
         // =========================================
-        // REFRESH DATA (Background - No toast)
+        // REFRESH DATA
         // =========================================
         function refreshData() {
             fetch(API_BASE + '/inventory/status')
@@ -625,14 +603,6 @@
                     updateFinishedGoods(data.finishedGoods);
                     updateAlerts(data.alerts);
                     updateStats(data);
-                    // Update product list for sell dropdown
-                    if (data.finishedGoods) {
-                        products = data.finishedGoods.map(f => ({
-                            id: f.product?.id,
-                            name: f.product?.name,
-                            available: f.quantityPacks
-                        }));
-                    }
                 })
                 .catch(() => showToast('❌ Failed to load data', 'error'));
         }
@@ -790,11 +760,10 @@
         }
 
         // =========================================
-        // ADD PRODUCT
+        // ADD PRODUCT (NO SKU)
         // =========================================
         function submitAddProduct() {
             const name = document.getElementById('newProductName').value.trim();
-            const sku = document.getElementById('newProductSku').value.trim();
             const stock = parseInt(document.getElementById('newProductStock').value) || 0;
             const jarsPerPack = parseInt(document.getElementById('newProductJars').value) || 1;
 
@@ -802,14 +771,9 @@
                 showToast('Please enter a product name', 'error');
                 return;
             }
-            if (!sku) {
-                showToast('Please enter a SKU', 'error');
-                return;
-            }
 
             const payload = {
                 name: name,
-                sku: sku,
                 initialStock: stock,
                 jarsPerPack: jarsPerPack
             };
