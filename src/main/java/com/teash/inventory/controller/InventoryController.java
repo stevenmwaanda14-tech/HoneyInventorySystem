@@ -75,7 +75,7 @@ public class InventoryController {
         }
     }
     
-    // ========== SALES ==========
+    // ========== SALES (LEGACY - KEPT FOR BACKWARD COMPATIBILITY) ==========
     
     @PostMapping("/sales/sell")
     public ResponseEntity<?> sellPacks(
@@ -93,6 +93,65 @@ public class InventoryController {
             notificationService.checkAndSendAlerts();
             
             return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    // ========== USED (NEW) WITH AUTO MATERIAL DEDUCTION ==========
+    
+    @PostMapping("/used/record")
+    public ResponseEntity<?> recordUsed(@RequestBody Map<String, Object> usedData) {
+        try {
+            // Extract values with proper null handling
+            Long productId = Long.parseLong(usedData.get("productId").toString());
+            Integer packs = Integer.parseInt(usedData.get("packs").toString());
+            
+            String customerName = usedData.get("customerName") != null ? 
+                usedData.get("customerName").toString() : "";
+            
+            Integer deductJars = 0;
+            if (usedData.get("deductJars") != null) {
+                deductJars = Integer.parseInt(usedData.get("deductJars").toString());
+            }
+            
+            Integer deductStickers = 0;
+            if (usedData.get("deductStickers") != null) {
+                deductStickers = Integer.parseInt(usedData.get("deductStickers").toString());
+            }
+            
+            Integer deductBoxes = 0;
+            if (usedData.get("deductBoxes") != null) {
+                deductBoxes = Integer.parseInt(usedData.get("deductBoxes").toString());
+            }
+            
+            // Validate
+            if (productId == null || productId <= 0) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Valid product ID is required");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            if (packs == null || packs <= 0) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Valid quantity is required");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            // Process the usage
+            Map<String, Object> result = inventoryService.recordUsed(
+                productId, packs, customerName, 
+                deductJars, deductStickers, deductBoxes
+            );
+            
+            return ResponseEntity.ok(result);
+            
+        } catch (NumberFormatException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Invalid number format: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());

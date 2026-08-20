@@ -218,7 +218,7 @@ public class InventoryService {
         }
     }
     
-    // ========== SALES ==========
+    // ========== SALES (LEGACY) ==========
     
     @Transactional
     public FinishedGoods sellPacks(Long productId, Integer packsToSell, String customerName, BigDecimal salePrice) {
@@ -228,14 +228,19 @@ public class InventoryService {
         FinishedGoods finished = finishedGoodsRepository.findByProduct(product)
             .orElseThrow(() -> new RuntimeException("Product not found in inventory"));
         
+        if (finished.getQuantityPacks() < packsToSell) {
+            throw new RuntimeException("Not enough stock. Available: " + finished.getQuantityPacks());
+        }
+        
         finished.subtractPacks(packsToSell);
         finishedGoodsRepository.save(finished);
         
         Sale sale = new Sale();
         sale.setProduct(product);
         sale.setQuantityPacks(packsToSell);
-        sale.setCustomerName(customerName);
+        sale.setCustomerName(customerName != null && !customerName.isEmpty() ? customerName : "Walk-in");
         sale.setSalePrice(salePrice);
+        sale.setSaleDate(LocalDateTime.now());
         saleRepository.save(sale);
         
         System.out.println("💰 Sold " + packsToSell + " of " + product.getName());
@@ -250,6 +255,120 @@ public class InventoryService {
         }
         
         return finished;
+    }
+    
+    // ========== USED (NEW) WITH AUTO MATERIAL DEDUCTION ==========
+    
+    @Transactional
+    public Map<String, Object> recordUsed(Long productId, Integer packs, String customerName,
+                                           Integer deductJars, Integer deductStickers, Integer deductBoxes) {
+        // Get the product
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+        
+        // Deduct from finished goods
+        FinishedGoods finished = finishedGoodsRepository.findByProduct(product)
+            .orElseThrow(() -> new RuntimeException("Product not found in inventory"));
+        
+        if (finished.getQuantityPacks() < packs) {
+            throw new RuntimeException("Not enough stock. Available: " + finished.getQuantityPacks());
+        }
+        finished.subtractPacks(packs);
+        finishedGoodsRepository.save(finished);
+        
+        // Deduct raw materials
+        Map<String, Integer> deductions = new HashMap<>();
+        Map<String, Integer> remainingStock = new HashMap<>();
+        List<String> errors = new ArrayList<>();
+        
+        // Deduct Jars
+        if (deductJars > 0) {
+            RawMaterial jars = rawMaterialRepository.findByName("Jars")
+                .orElseThrow(() -> new RuntimeException("Jars material not found"));
+            if (jars.getQuantity() < deductJars) {
+                errors.add("Not enough Jars. Need: " + deductJars + ", Have: " + jars.getQuantity());
+            } else {
+                jars.subtractQuantity(deductJars);
+                rawMaterialRepository.save(jars);
+                deductions.put("Jars", deductJars);
+                remainingStock.put("Jars", jars.getQuantity());
+            }
+        }
+        
+        // Deduct Stickers
+        if (deductStickers > 0) {
+            RawMaterial stickers = rawMaterialRepository.findByName("Stickers")
+                .orElseThrow(() -> new RuntimeException("Stickers material not found"));
+            if (stickers.getQuantity() < deductStickers) {
+                errors.add("Not enough Stickers. Need: " + deductStickers + ", Have: " + stickers.getQuantity());
+            } else {
+                stickers.subtractQuantity(deductStickers);
+                rawMaterialRepository.save(stickers);
+                deductions.put("Stickers", deductStickers);
+                remainingStock.put("Stickers", stickers.getQuantity());
+            }
+        }
+        
+        // Deduct Boxes
+        if (deductBoxes > 0) {
+            RawMaterial boxes = rawMaterialRepository.findByName("Boxes")
+                .orElseThrow(() -> new RuntimeException("Boxes material not found"));
+            if (boxes.getQuantity() < deductBoxes) {
+                errors.add("Not enough Boxes. Need: " + deductBoxes + ", Have: " + boxes.getQuantity());
+            } else {
+                boxes.subtractQuantity(deductBoxes);
+                rawMaterialRepository.save(boxes);
+                deductions.put("Boxes", deductBoxes);
+                remainingStock.put("Boxes", boxes.getQuantity());
+            }
+        }
+        
+        // If there were errors, rollback by throwing exception
+        if (!errors.isEmpty()) {
+            throw new RuntimeException("Insufficient materials:\n" + String.join("\n", errors));
+        }
+        
+        // Log sale/usage
+        Sale sale = new Sale();
+        sale.setProduct(product);
+        sale.setQuantityPacks(packs);
+        sale.setCustomerName(customerName != null && !customerName.isEmpty() ? customerName : "Used");
+        sale.setSalePrice(null);
+        sale.setSaleDate(LocalDateTime.now());
+        saleRepository.save(sale);
+        
+        // Build notification message
+        StringBuilder materialMsg = new StringBuilder();
+        if (!deductions.isEmpty()) {
+            materialMsg.append("\n📦 Materials Deducted:");
+            for (Map.Entry<String, Integer> entry : deductions.entrySet()) {
+                materialMsg.append("\n  • ").append(entry.getKey()).append(": ").append(entry.getValue());
+            }
+        }
+        
+        // Send Telegram notification
+        String message = String.format(
+            "📦 Usage Recorded\n" +
+            "Product: %s\n" +
+            "Packs Used: %d\n" +
+            "Remaining Stock: %d%s",
+            product.getName(), packs, finished.getQuantityPacks(),
+            materialMsg.toString()
+        );
+        notificationService.sendTelegramCustomAlert("📦 Usage Recorded", message);
+        
+        // Check for low stock alerts
+        notificationService.checkAndSendAlerts();
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Usage recorded successfully");
+        response.put("product", product.getName());
+        response.put("packsUsed", packs);
+        response.put("remainingStock", finished.getQuantityPacks());
+        response.put("materialsDeducted", deductions);
+        response.put("remainingMaterials", remainingStock);
+        
+        return response;
     }
     
     // ========== PRODUCT MANAGEMENT ==========

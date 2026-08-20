@@ -55,12 +55,12 @@
         .header-actions button:hover {
             background: rgba(255,255,255,0.3);
         }
-        .header-actions .btn-sell {
-            background: rgba(40, 167, 69, 0.4);
-            border-color: #28a745;
+        .header-actions .btn-used {
+            background: rgba(220, 53, 69, 0.4);
+            border-color: #dc3545;
         }
-        .header-actions .btn-sell:hover {
-            background: rgba(40, 167, 69, 0.6);
+        .header-actions .btn-used:hover {
+            background: rgba(220, 53, 69, 0.6);
         }
         .header-actions .btn-receive {
             background: rgba(23, 162, 184, 0.4);
@@ -208,19 +208,19 @@
         .btn-success:hover {
             background: #218838;
         }
-        .btn-primary {
-            background: #D2691E;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #8B4513;
-        }
         .btn-danger {
             background: #dc3545;
             color: white;
         }
         .btn-danger:hover {
             background: #c82333;
+        }
+        .btn-primary {
+            background: #D2691E;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #8B4513;
         }
         .modal {
             display: none;
@@ -284,6 +284,16 @@
         .form-group select:focus {
             outline: none;
             border-color: #D2691E;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
         .toast {
             position: fixed;
@@ -361,6 +371,31 @@
             font-size: 48px;
             margin-bottom: 10px;
         }
+        .material-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f4f0;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .material-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .material-checkbox label {
+            font-size: 14px;
+            cursor: pointer;
+            margin: 0;
+        }
+        .checkbox-group {
+            background: #f8f4f0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 <body>
@@ -372,7 +407,7 @@
                 <div class="last-updated" id="lastUpdated">Loading...</div>
             </div>
             <div class="header-actions">
-                <button class="btn-sell" onclick="openModal('sellModal')">💰 Sell Product</button>
+                <button class="btn-used" onclick="openModal('usedModal')">📦 Used</button>
                 <button class="btn-receive" onclick="openModal('receiveModal')">📦 Receive</button>
                 <button onclick="refreshData()">🔄 Refresh</button>
             </div>
@@ -450,28 +485,46 @@
         </div>
     </div>
 
-    <!-- ===== SELL MODAL ===== -->
-    <div class="modal" id="sellModal">
+    <!-- ===== USED MODAL ===== -->
+    <div class="modal" id="usedModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>💰 Sell Product</h3>
-                <button class="modal-close" onclick="closeModal('sellModal')">&times;</button>
+                <h3>📦 Used Packs/Materials</h3>
+                <button class="modal-close" onclick="closeModal('usedModal')">&times;</button>
             </div>
             <div class="form-group">
                 <label>Select Product</label>
-                <select id="sellProduct">
+                <select id="usedProduct">
                     <option value="">Select product...</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Number of Products Sold</label>
-                <input type="number" id="sellQuantity" value="1" min="1">
+                <label>Used Packs/Materials</label>
+                <input type="number" id="usedQuantity" value="1" min="1">
             </div>
+            
+            <!-- Material Deduction Section -->
+            <div class="checkbox-group">
+                <label style="font-weight:600;display:block;margin-bottom:8px;">Deduct Raw Materials:</label>
+                <div class="material-checkbox">
+                    <input type="checkbox" id="usedDeductJars" checked>
+                    <label for="usedDeductJars">Deduct Jars (<span id="usedJarsPerPack">1</span> per pack)</label>
+                </div>
+                <div class="material-checkbox">
+                    <input type="checkbox" id="usedDeductStickers" checked>
+                    <label for="usedDeductStickers">Deduct Stickers (<span id="usedStickersPerPack">1</span> per pack)</label>
+                </div>
+                <div class="material-checkbox">
+                    <input type="checkbox" id="usedDeductBoxes" checked>
+                    <label for="usedDeductBoxes">Deduct Boxes (<span id="usedBoxesPerPack">1</span> per pack)</label>
+                </div>
+            </div>
+            
             <div class="form-group">
                 <label>Customer Name (Optional)</label>
-                <input type="text" id="sellCustomer" placeholder="Optional">
+                <input type="text" id="usedCustomer" placeholder="Optional">
             </div>
-            <button class="btn btn-success" onclick="submitSell()">💰 Sell Product</button>
+            <button class="btn btn-danger" onclick="submitUsed()">📦 Confirm Used</button>
         </div>
     </div>
 
@@ -502,7 +555,7 @@
         </div>
     </div>
 
-    <!-- ===== ADD PRODUCT MODAL (NO SKU) ===== -->
+    <!-- ===== ADD PRODUCT MODAL ===== -->
     <div class="modal" id="addProductModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -531,6 +584,7 @@
     <script>
         const API_BASE = window.location.origin + '/api';
         let products = [];
+        let productJarsPerPack = {};
 
         // =========================================
         // TOAST
@@ -550,7 +604,7 @@
         // =========================================
         function openModal(id) {
             document.getElementById(id).classList.add('show');
-            if (id === 'sellModal') loadProductsForSelect();
+            if (id === 'usedModal') loadProductsForSelect();
         }
 
         function closeModal(id) {
@@ -559,6 +613,13 @@
                 document.getElementById('newProductName').value = '';
                 document.getElementById('newProductStock').value = '0';
                 document.getElementById('newProductJars').value = '1';
+            }
+            if (id === 'usedModal') {
+                document.getElementById('usedQuantity').value = '1';
+                document.getElementById('usedDeductJars').checked = true;
+                document.getElementById('usedDeductStickers').checked = true;
+                document.getElementById('usedDeductBoxes').checked = true;
+                document.getElementById('usedCustomer').value = '';
             }
         }
 
@@ -579,14 +640,29 @@
                 .then(r => r.json())
                 .then(data => {
                     products = data;
-                    const select = document.getElementById('sellProduct');
+                    const select = document.getElementById('usedProduct');
                     select.innerHTML = '<option value="">Select product...</option>';
                     data.forEach(p => {
                         const opt = document.createElement('option');
                         opt.value = p.id;
                         opt.textContent = p.name;
+                        opt.dataset.jarsPerPack = p.jarsPerPack || 1;
                         select.appendChild(opt);
                     });
+                    
+                    // Update material counts when product changes
+                    select.addEventListener('change', function() {
+                        const selected = this.options[this.selectedIndex];
+                        const jars = selected.dataset.jarsPerPack || 1;
+                        document.getElementById('usedJarsPerPack').textContent = jars;
+                        document.getElementById('usedStickersPerPack').textContent = '1';
+                        document.getElementById('usedBoxesPerPack').textContent = '1';
+                    });
+                    
+                    // Trigger initial update
+                    if (select.options.length > 0) {
+                        select.dispatchEvent(new Event('change'));
+                    }
                 })
                 .catch(() => showToast('Failed to load products', 'error'));
         }
@@ -696,12 +772,15 @@
         }
 
         // =========================================
-        // SELL PRODUCT
+        // USED (SELL) - Auto Deduct Materials
         // =========================================
-        function submitSell() {
-            const productId = document.getElementById('sellProduct').value;
-            const quantity = parseInt(document.getElementById('sellQuantity').value);
-            const customer = document.getElementById('sellCustomer').value || '';
+        function submitUsed() {
+            const productId = document.getElementById('usedProduct').value;
+            const quantity = parseInt(document.getElementById('usedQuantity').value);
+            const customer = document.getElementById('usedCustomer').value || '';
+            const deductJars = document.getElementById('usedDeductJars').checked;
+            const deductStickers = document.getElementById('usedDeductStickers').checked;
+            const deductBoxes = document.getElementById('usedDeductBoxes').checked;
 
             if (!productId) {
                 showToast('Please select a product', 'error');
@@ -712,21 +791,47 @@
                 return;
             }
 
-            let url = API_BASE + `/sales/sell?productId=${productId}&packs=${quantity}`;
-            if (customer) url += `&customerName=${encodeURIComponent(customer)}`;
+            // Get jars per pack from selected product
+            const select = document.getElementById('usedProduct');
+            const selectedOption = select.options[select.selectedIndex];
+            const jarsPerPack = parseInt(selectedOption.dataset.jarsPerPack) || 1;
+            
+            // Calculate material deductions
+            const jarsToDeduct = deductJars ? quantity * jarsPerPack : 0;
+            const stickersToDeduct = deductStickers ? quantity : 0;
+            const boxesToDeduct = deductBoxes ? quantity : 0;
 
-            fetch(url, { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.error) {
-                        showToast('❌ ' + data.error, 'error');
-                    } else {
-                        showToast('💰 Sold ' + quantity + ' product(s)!', 'success');
-                        closeModal('sellModal');
-                        refreshData();
-                    }
-                })
-                .catch(() => showToast('❌ Failed to sell product', 'error'));
+            const payload = {
+                productId: parseInt(productId),
+                packs: quantity,
+                customerName: customer,
+                deductJars: jarsToDeduct,
+                deductStickers: stickersToDeduct,
+                deductBoxes: boxesToDeduct
+            };
+
+            fetch(API_BASE + '/used/record', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showToast('❌ ' + data.error, 'error');
+                } else {
+                    let msg = '📦 Recorded ' + quantity + ' pack(s) used!';
+                    if (jarsToDeduct > 0) msg += '\n- ' + jarsToDeduct + ' Jars deducted';
+                    if (stickersToDeduct > 0) msg += '\n- ' + stickersToDeduct + ' Stickers deducted';
+                    if (boxesToDeduct > 0) msg += '\n- ' + boxesToDeduct + ' Boxes deducted';
+                    showToast(msg, 'success');
+                    closeModal('usedModal');
+                    refreshData();
+                }
+            })
+            .catch(() => showToast('❌ Failed to record usage', 'error'));
         }
 
         // =========================================
@@ -760,7 +865,7 @@
         }
 
         // =========================================
-        // ADD PRODUCT (NO SKU)
+        // ADD PRODUCT
         // =========================================
         function submitAddProduct() {
             const name = document.getElementById('newProductName').value.trim();
