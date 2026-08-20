@@ -9,7 +9,6 @@ package com.teash.inventory.entity;
  * @author hp
  */
 
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

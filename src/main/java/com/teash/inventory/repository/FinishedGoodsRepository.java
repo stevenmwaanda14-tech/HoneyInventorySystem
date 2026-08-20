@@ -9,7 +9,6 @@ package com.teash.inventory.repository;
  * @author hp
  */
 
-
 import com.teash.inventory.entity.FinishedGoods;
 import com.teash.inventory.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +20,5 @@ import java.util.Optional;
 public interface FinishedGoodsRepository extends JpaRepository<FinishedGoods, Long> {
     Optional<FinishedGoods> findByProduct(Product product);
     List<FinishedGoods> findByQuantityPacksGreaterThan(Integer quantity);
+    void deleteByProduct(Product product);
 }

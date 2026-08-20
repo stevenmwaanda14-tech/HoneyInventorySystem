@@ -9,8 +9,6 @@ package com.teash.inventory.service;
  * @author hp
  */
 
-
-
 import com.teash.inventory.entity.*;
 import com.teash.inventory.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -256,33 +254,27 @@ public class InventoryService {
     
     // ========== PRODUCT MANAGEMENT ==========
     
-    public Product getProductBySku(String sku) {
-        return productRepository.findBySku(sku).orElse(null);
-    }
-    
-    public Product saveProduct(Product product) {
-        return productRepository.save(product);
-    }
-    
     @Transactional
-    public Product addNewProduct(String name, String sku, Integer initialStock, Integer jarsPerPack) {
-        // Check if SKU already exists
-        if (productRepository.findBySku(sku).isPresent()) {
-            throw new RuntimeException("SKU already exists: " + sku);
+    public Product addNewProduct(String name, Integer initialStock, Integer jarsPerPack) {
+        // Check if product name already exists
+        Optional<Product> existing = productRepository.findByName(name);
+        if (existing.isPresent()) {
+            throw new RuntimeException("Product already exists: " + name);
         }
         
         // Create product
-        Product product = new Product(name, sku);
+        Product product = new Product(name);
         if (jarsPerPack != null && jarsPerPack > 0) {
             product.setJarsPerPack(jarsPerPack);
         }
         Product saved = productRepository.save(product);
         
-        // Add initial stock if provided
+        // Add initial stock
         if (initialStock != null && initialStock > 0) {
             addInitialStock(saved.getId(), initialStock);
         }
         
+        System.out.println("✅ Product added: " + name + " (Stock: " + initialStock + ")");
         return saved;
     }
     
@@ -319,7 +311,6 @@ public class InventoryService {
         FinishedGoods finished = finishedGoodsRepository.findByProduct(product)
             .orElse(new FinishedGoods(product, 0));
         
-        // Just update the quantity directly
         finished.setQuantityPacks(newQuantity);
         finished.setLastUpdated(LocalDateTime.now());
         finishedGoodsRepository.save(finished);

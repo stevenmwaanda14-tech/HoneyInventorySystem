@@ -9,7 +9,6 @@ package com.teash.inventory.entity;
  * @author hp
  */
 
-
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -24,10 +23,7 @@ public class Product {
     @Column(nullable = false, length = 100)
     private String name;
     
-    @Column(unique = true, nullable = false, length = 50)
-    private String sku;
-    
-    @Column(name = "jars_per_pack", nullable = false)
+    @Column(nullable = false)
     private Integer jarsPerPack = 1;
     
     @Column(nullable = false)
@@ -39,10 +35,15 @@ public class Product {
     // Constructors
     public Product() {}
     
-    public Product(String name, String sku) {
+    public Product(String name) {
         this.name = name;
-        this.sku = sku;
         this.jarsPerPack = 1;
+        this.active = true;
+    }
+    
+    public Product(String name, Integer jarsPerPack) {
+        this.name = name;
+        this.jarsPerPack = jarsPerPack != null ? jarsPerPack : 1;
         this.active = true;
     }
     
@@ -52,9 +53,6 @@ public class Product {
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
-    public String getSku() { return sku; }
-    public void setSku(String sku) { this.sku = sku; }
     
     public Integer getJarsPerPack() { return jarsPerPack; }
     public void setJarsPerPack(Integer jarsPerPack) { this.jarsPerPack = jarsPerPack; }
